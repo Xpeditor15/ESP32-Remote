@@ -12,8 +12,17 @@ void setup() {
     printActiveIRProtocols(&Serial);
 }
 
+void generateTone();
+void handleOverflow();
+bool detectLongPress(uint16_t aLongPressDurationMillis);
+
 void loop() {
     if (IrReceiver.decode()) {
         Serial.println();
+        IrReceiver.printIRResultMinimal(&Serial);
+
+        if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_WAS_OVERFLOW) {
+            
+        }
     }
 }
