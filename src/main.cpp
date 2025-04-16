@@ -1,33 +1,35 @@
+/*
+This example receives the IR signal and tries to decode it and display the protocol used
+*/
+
 #include "main.h"
 
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
-
 void setup() {
-    Serial.begin(115200); 
+    Serial.begin(115200);
 
-    pinMode(RGB_BUILTIN, OUTPUT);
-    pinMode(TFT_LED, OUTPUT);
-    pinMode(Button, INPUT_PULLUP); //sets the RGB light and LCD backlight as output, button as input pullup
-    
-    digitalWrite(TFT_LED, HIGH); //sets the LCD backlight as high so the screen lights up
-    
-    tft.initR(INITR_144GREENTAB);
-
-    tft.setFont();
-    tft.fillScreen()
-
-    IrReceiver.begin(RECEIV_PIN, false); //initializes the IR receiver
-    Serial.println("IR receiver initialized");
-    IrSender.begin(TRANS_PIN); //initializes the IR transmitter
-    Serial.println("IR transmitter initialized"); 
-    disableLEDFeedback();
-}
+    IrReceiver.begin(RECEIV_PIN, false); //disables LED feedback
+    Serial.print("IR receiver initialized on ");
+    printActiveIRProtocols(&Serial);
+}   
 
 void loop() {
     if (IrReceiver.decode()) {
-        char protocol[20];
-        Serial.println("Successfully decoded IR signals");
-    }
+        Serial.println();
+        IrReceiver.printIRResultMinimal(&Serial);
 
-    delay(1000);
+        if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
+            Serial.println(F("Received unknown protocol"));
+            IrReceiver.printIRResultRawFormatted(&Serial, true);
+            IrReceiver.resume();
+        } else {
+            IrReceiver.resume();
+            IrReceiver.printIRResultShort(&Serial);
+            IrReceiver.printIRSendUsage(&Serial);
+        }
+        Serial.println();
+
+        if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
+            Serial.println(F("Repeat received. Here you can repeat the same action as before"));
+        }
+    }
 }
