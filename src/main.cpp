@@ -4,32 +4,25 @@ This example receives the IR signal and tries to decode it and display the proto
 
 #include "main.h"
 
+IRrecv irrecv(RECEIV_PIN);
+
+decode_results results;
+
 void setup() {
     Serial.begin(115200);
-
-    IrReceiver.begin(RECEIV_PIN, false); //disables LED feedback
-    Serial.print("IR receiver initialized on ");
-    printActiveIRProtocols(&Serial);
-}   
+    irrecv.enableIRIn();
+    while (!Serial)
+        delay(50);
+    Serial.println();
+    Serial.print(F("IR sensor is now initialized on"));
+    Serial.println(RECEIV_PIN);
+}
 
 void loop() {
-    if (IrReceiver.decode()) {
-        Serial.println();
-        IrReceiver.printIRResultMinimal(&Serial);
-
-        if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
-            Serial.println(F("Received unknown protocol"));
-            IrReceiver.printIRResultRawFormatted(&Serial, true);
-            IrReceiver.resume();
-        } else {
-            IrReceiver.resume();
-            IrReceiver.printIRResultShort(&Serial);
-            IrReceiver.printIRSendUsage(&Serial);
-        }
-        Serial.println();
-
-        if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
-            Serial.println(F("Repeat received. Here you can repeat the same action as before"));
-        }
+    if (irrecv.decode(&results)) {
+        serialPrintUint64(results.value, HEX);
+        Serial.println("");
+        irrecv.resume();
     }
+    delay(100);
 }
